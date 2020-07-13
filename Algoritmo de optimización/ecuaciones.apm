@@ -1,0 +1,171 @@
+Parameters
+ final
+
+ w1p = 0 > -20 < 20
+ w2p = 0 > -20 < 20
+ w3p = 0 > -20 < 20
+ w4p = 0 > -20 < 20
+
+
+Constants
+!----------------COEFICIENTES DEL MODELO-----------------!
+#Gravedad
+g = 9.81 !m/s^2
+pi = 3.14159265359
+
+#Motor Coefficients
+ J = 4.1904e-5 !kg*m^2
+ kt = 0.0104e-3 !N*m/A
+ kv = 96.342 !rad/s/volt
+ Dv = 0.2e-3 !N*m*s/rad
+ R = 0.2 !Ohms
+
+#Battery parameters
+ Q = 1.55 !Ah
+ Rint = 0.02 !Ohms
+ E0 = 1.24 !volt
+ K = 2.92e-3 !volt
+ A = 0.156
+ B =2.35
+
+#Quadrotor parameters
+ l = 0.175 !m
+ m = 1.3 !kg
+ Ix = 0.081 !kg*m^2
+ Iy = 0.081 !kg*m^2
+ Iz = 0.142 !kg*m^2
+ kb = 3.8305e-6 !N/rad/s
+ ktau = 2.2518e-8 !(N*m)/rad/s
+
+#Parametrización del polinomio
+ a1 = -1.72e-5
+ a2 = 1.95e-5
+ a3 = -6.98e-6
+ a4 = 4.09e-7
+ b1 = 0.014
+ b2 = -0.0157
+ b3 = 5.656e-3
+ b4 = -3.908e-4
+ c1 = -0.8796
+ c2 = 0.3385
+ c3 = 0.2890
+ c4 = 0.1626
+!Posiciones finales del UAV
+ xf = 4         #Pos. Final x
+ yf = 5         #Pos. Final y
+ zf = 6         #Pos. Final z
+Variables
+!------------------CONDICONES INICIALES------------------!
+ x = 0         #Pos. Inicial x
+ y = 0         #Pos. Inicial y
+ z = 0         #Pos. Inicial z
+ xp = 0
+ yp = 0
+ zp = 0
+ pitch = 0, >=-pi/2, <=pi/2   !theta - restricciones
+ pitchp = 0
+ roll = 0, >=-pi/2, <=pi/2    !phi - restricciones
+ rollp = 0
+ yaw = 0                      !psi
+ yawp = 0  , >=-200/180, <=200/180
+
+#Velocidad de rotores rad/s
+#Las condiciones iniciales permiten igualar la acción de la gravedad
+#Se tomo 4000rad/s como la velocidad maxima de los rotores
+w1 = 912.32, >=0, <=3000
+w2 = 912.32, >=0, <=3000
+w3 = 912.32, >=0, <=3000
+w4 = 912.32, >=0, <=3000
+
+t1 = 0, >=0
+t2 = 0, >=0
+t3 = 0, >=0
+t4 = 0, >=0
+
+#Función objetivo
+  of = 0 !condición inicial de la función objetivo
+Intermediates
+
+#Motor 1
+  aw1 = a1*w1^2 + b1*w1 + c1
+  bw1 = a2*w1^2 + b2*w1 + c2
+  cw1 = a3*w1^2 + b3*w1 + c3
+  dw1 = a4*w1^2 + b4*w1 + c4
+#Motor 2
+  aw2 = a1*w2^2 + b1*w2 + c1
+  bw2 = a2*w2^2 + b2*w2 + c2
+  cw2 = a3*w2^2 + b3*w2 + c3
+  dw2 = a4*w2^2 + b4*w2 + c4
+#Motor 3
+  aw3 = a1*w3^2 + b1*w3 + c1
+  bw3 = a2*w3^2 + b2*w3 + c2
+  cw3 = a3*w3^2 + b3*w3 + c3
+  dw3 = a4*w3^2 + b4*w3 + c4
+#Motor 4
+  aw4 = a1*w4^2 + b1*w4 + c1
+  bw4 = a2*w4^2 + b2*w4 + c2
+  cw4 = a3*w4^2 + b3*w4 + c3
+  dw4 = a4*w4^2 + b4*w4 + c4
+#frj(wj(t),Tj(t))
+  fr1=aw1*t1^3 + bw1*t1^2 + cw1*t1 + dw1
+  fr2=aw2*t2^3 + bw2*t2^2 + cw2*t2 + dw2
+  fr3=aw3*t3^3 + bw3*t3^2 + cw3*t3 + dw3
+  fr4=aw4*t4^3 + bw4*t4^2 + cw4*t4 + dw4
+!---------------------CONTROL INPUTS---------------------!
+  T = kb * (w1^2 + w2^2 + w3^2 + w4^2)
+  u1 = kb * (w2^2 - w4^2)
+  u2 = kb * (w3^2 - w1^2)
+  u3 = ktau * (w1^2 - w2^2 + w3^2 - w4^2)
+  wline = w1 - w2 + w3 - w4
+!-------------------ENERGIA POR ROTOR--------------------!
+  Ec1 = ((J*$w1 + ktau*w1^2 + Dv*w1)/fr1)*w1
+  Ec2 = ((J*$w2 + ktau*w2^2 + Dv*w2)/fr2)*w2
+  Ec3 = ((J*$w3 + ktau*w3^2 + Dv*w3)/fr3)*w3
+  Ec4 = ((J*$w4 + ktau*w4^2 + Dv*w4)/fr4)*w4
+  Ectotal = Ec1 + Ec2 + Ec3 + Ec4
+  !---------------------ACELERACIONES--------------------!
+  xpp = $xp
+  ypp = $yp
+  zpp = $yp
+  pitchpp = $pitchp
+  rollpp = $rollp
+  yawpp = $yawp
+! scaling factor for terminal constraint
+  f = 1000
+  f2 = 100000
+Equations
+!---------------MINIMIZAR FUNCIÓN OBJETIVO---------------!
+  minimize final * of
+!-----------------RELACION DE VARIABLES------------------!
+  $x = xp
+  $y = yp
+  $z = zp
+  $pitch = pitchp
+  $roll = rollp
+  $yaw = yawp
+
+  $w1 = w1p
+  $w2 = w2p
+  $w3 = w3p
+  $w4 = w4p
+!-----------------CONDICONES DE FRONTERA-----------------!
+#Condiciones finales del modelo
+  minimize f*final*((x-xf)^2 + (y-yf)^2 + (z-zf)^2)
+  minimize f2*final*(xp^2 + yp^2 + zp^2)
+  minimize f2*final*(roll^2 + pitch^2 + yaw^2)
+  minimize f2*final*(rollp^2 + pitchp^2 + yawp^2)
+!-----------------TORQUE DE LOS MOTORES------------------!
+  t1 = J*w1p + ktau*w1^2 + Dv*w1
+  t2 = J*w2p + ktau*w2^2 + Dv*w2
+  t3 = J*w3p + ktau*w3^2 + Dv*w3
+  t4 = J*w4p + ktau*w4^2 + Dv*w4
+!------------------------SUJETO A------------------------!
+#Modelo aerodinámico del UAV
+  m*$xp = (cos(roll)*sin(pitch)*cos(yaw) + sin(roll)*sin(yaw))*T
+  m*$yp = (cos(roll)*sin(pitch)*sin(yaw) - sin(roll)*cos(yaw))*T
+  m*$zp = ((cos(roll)*cos(pitch))*T-m*g)
+  Ix*$rollp = ((Iy - Iz)*pitchp*yawp + l*u1)
+  Iy*$pitchp = ((Iz - Ix)*rollp*yawp + l*u2)
+  Iz*$yawp = ((Ix - Iy)*rollp*pitchp + u3)
+!--------------------FUNCIÓN OBJETIVO--------------------!
+  $of = Ectotal
